@@ -1,0 +1,36 @@
+# Linkedin
+username: # Email Address
+password: # Account Password
+
+positions:
+- DevOps
+# - Another position you want to search for
+# - A third position you want to search for
+
+locations:
+- London
+# - Amsterdam
+# - The Hague
+
+uploads:
+  Resume: # Location.pdf
+# A second location you want to search in
+
+# --------- Optional Parameters -------
+# uploads:
+#  Resume: # PATH TO Resume
+#  Cover Letter: # PATH TO cover letter
+#  Photo: # PATH TO photo
+
+
+# output_filename:
+# - # PATH TO OUTPUT FILE (default output.csv)
+
+blacklist:
+# - # Company names you want to ignore
+
+#blackListTitles:
+#- # Add job titles / Words you want to ignore
+
+blackListTitles:
+# Keywords
