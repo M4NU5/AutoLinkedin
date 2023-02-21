@@ -10,7 +10,6 @@ positions:
 locations:
 - London
 # - Amsterdam
-# - The Hague
 
 # NOTE This funciton inputs to the upload function.
 #      The upload function is currently broken. 
