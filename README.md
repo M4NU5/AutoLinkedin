@@ -57,7 +57,7 @@ python3 easyapplybot.py
 
 
 ## Review.py
-A review script i wrote to iterate through the generated 'output.csv' file.
+A review script to iterate through the generated 'output.csv' file.
 Execution:
 ```bash
 python3 review.py
@@ -65,7 +65,7 @@ python3 review.py
 
 ### Script guide
 It will display a text element of the failed job application.
-IF job title is of interest press 'Enter'
-    This will open the job page
-If the job title is NOT of interest press a random key then 'Enter' 
-    This will skip the job
+
+IF job title is of interest press 'Enter': This will open the job page.
+
+IF the job title is NOT of interest press a random key then 'Enter': This will skip the job
