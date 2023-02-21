@@ -1,15 +1,21 @@
 import pandas as pd
 import webbrowser as wb
+import chardet
 
 # CSV File format
 # timestamp, jobID, job, company, attempted, result
 
 
 def ReviewApplications():
-    for chunk in pd.read_csv("output.csv", sep=',', header=0):
-        print(chunk)
-        input("----")
-    applicationData = pd.read_csv("output.csv", sep=',', header=0)
+    file_name = "output.csv"
+    with open(file_name, 'rb') as f:
+        result = chardet.detect(f.read())
+        encoding = result['encoding']
+
+    # for chunk in pd.read_csv(file_name, sep=',', header=0, encoding=encoding):
+    #     print(chunk)
+    #     input("----")
+    applicationData = pd.read_csv("output.csv", sep=',', header=0, encoding=encoding)
     # applicationData = pd.read_csv("output copy.csv", sep=',', header=0)
 
     print("Cleaning duplicates...")
@@ -29,7 +35,6 @@ def ReviewApplications():
     for dfindex, row in applicationData.iterrows():
         if row['result'] is False:
             ID = str(row["jobID"])
-            wb.open(url + ID)
 
             # Column then index then cell
             applicationData.at[dfindex, 'jobID'] = ID
@@ -51,8 +56,10 @@ def ReviewApplications():
             print('Total Applications to Review: {0}'.format(TotaltoReview))
             print('Reviewed: {0}'.format(count))
             print("-----------------------------------------------")
-            print("----------------- Press Enter -----------------")
-            input("-----------------------------------------------")
+            print("------------- Press Enter or Skip -------------")
+            user_input = input("-----------------------------------------------")
+            if user_input == "":
+                wb.open(url + ID)
             print("")
 
 

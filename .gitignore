@@ -1,4 +1,7 @@
+config.yaml
+output.csv
 **.DS_Store
 **.pdf
-**.yaml
+/botenv
+/logs
 /archive

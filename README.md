@@ -6,7 +6,7 @@ Video: https://www.youtube.com/watch?v=4R4E304fEAs
 
 ## Setup 
 
-The run the bot install requirements
+The run the bot install requirements. Advised you generate a venv for this.
 ```bash
 pip3 install -r requirements.txt
 ```
@@ -49,7 +49,22 @@ list in the config file.
 ## Execute
 
 To execute the bot run the following in your terminal
-```
+```bash
 python3 easyapplybot.py
 ```
 
+
+
+## Review.py
+A review script i wrote to iterate through the generated 'output.csv' file.
+Execution:
+```bash
+python3 review.py
+```
+
+#### Script guide
+It will display a text element of the failed job application.
+IF job title is of interest press 'Enter'
+    This will open the job page
+If the job title is NOT of interest press a random key then 'Enter' 
+    This will skip the job

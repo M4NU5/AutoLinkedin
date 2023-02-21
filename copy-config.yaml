@@ -12,8 +12,11 @@ locations:
 # - Amsterdam
 # - The Hague
 
+# NOTE This funciton inputs to the upload function.
+#      The upload function is currently broken. 
+#      As a work around the script will select the most recent uploaded/used CV on linkedin
 uploads:
-  Resume: # Location.pdf
+  Resume: # ./Users/{USER}/Desktop/AutoLinkedin/bot/CVDocument.pdf
 # A second location you want to search in
 
 # --------- Optional Parameters -------

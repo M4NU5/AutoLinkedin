@@ -23,15 +23,19 @@ import pandas as pd
 import pyautogui
 
 from urllib.request import urlopen
-from webdriver_manager.chrome import ChromeDriverManager
+from webdriver_manager.chrome import ChromeDriverManager # Install manager?
 import re
 import yaml
 from datetime import datetime, timedelta
 
+# import chardet
+
 log = logging.getLogger(__name__)
 print("Installing chrome manager...")
+# TODO ChromeDriverManager().install() downloads 8 MB file each time script is run. 
+#           Can this be cached or optomised?
 driver = webdriver.Chrome(ChromeDriverManager().install())
-
+driver = webdriver.Chrome()
 
 def setupLogger():
     dt = datetime.strftime(datetime.now(), "%m_%d_%y %H_%M_%S ")
@@ -68,7 +72,7 @@ class EasyApplyBot:
         dirpath = os.getcwd()
         log.info("current directory is : " + dirpath)
 
-        self.uploads = uploads
+        self.uploads = uploads  # Holds path to file
         self.output_filename = output_filename
         past_ids = self.get_appliedIDs(output_filename)# [1:]
         self.appliedJobIDs = past_ids if past_ids != None else []
@@ -80,6 +84,7 @@ class EasyApplyBot:
         self.wait = WebDriverWait(self.browser, 30)
         self.blacklist = blacklist
         self.blackListTitles = blackListTitles
+
         self.start_linkedin(username, password)
 
     def get_appliedIDs(self, output_filename):
@@ -102,6 +107,7 @@ class EasyApplyBot:
             return None
 
     def get_questions(self, question_filename):
+        # TODO Import and export questions encountered
         try:
             df = pd.read_csv(question_filename,
                             header=None,
@@ -166,6 +172,7 @@ class EasyApplyBot:
                 combos.append(combo)
                 log.info(f"Applying to {position}: {location}")
                 location = "&location=" + location
+                # Primary Loop Function
                 self.applications_loop(position, location)
             if len(combos) > 500:
                 break
@@ -192,12 +199,14 @@ class EasyApplyBot:
 
                 # sleep to make sure everything loads, add random to make us look human.
                 randoTime = random.uniform(3.5, 4.9)
+
                 log.debug(f"Sleeping for {round(randoTime, 1)}")
+
                 time.sleep(randoTime)
                 self.load_page(sleep=3)
 
                 # LinkedIn displays the search results in a scrollable <div> on the left side, we have to scroll to its bottom
-
+                # This will be a single element
                 scrollresults = self.browser.find_element(By.CLASS_NAME, "jobs-search-results-list")
 
                 # Selenium only detects visible elements; if we scroll to the bottom too fast, only 8-9 results will be loaded into IDs list
@@ -206,19 +215,22 @@ class EasyApplyBot:
 
                 time.sleep(1)
 
-                # get job links
+                # get job ID (LinkedIn uses a predictable job iD format)
                 links = self.browser.find_elements(By.XPATH, '//div[@data-job-id]')
+        
+                # log.debug(f' Count: {len(links)} Job Links: {links}')
 
                 if len(links) == 0:
-                    break
+                    break 
 
                 # get job ID of each job link
-                # Blacklist skip here
+                # TODO Blacklist skip here
                 IDs = []
                 for link in links:
-                    children = link.find_elements(By.XPATH, './/a[@data-control-name]')
+                    children = link.find_elements(By.XPATH, './/a[@data-control-id]')
+                    # children = link.find_elements(By.ID, "data-job-id")
+                    # log.debug(f'children: {children}')
                     for child in children:
-                        #input(child.text)
                         if child.text not in self.blacklist:
                             temp = link.get_attribute("data-job-id")
                             jobID = temp.split(":")[-1]
@@ -293,7 +305,7 @@ class EasyApplyBot:
                             big_sleep = True
                             time.sleep(sleepTime)
                     else:
-                        print("Already applied to that ^^")
+                        log.info(f"\nAlready applied to {self.browser.title} \n")
                     # sleep every 20 applications
 
 
@@ -309,7 +321,7 @@ class EasyApplyBot:
                                                                         location,
                                                                         jobs_per_page)
             except Exception as e:
-                print(e)
+                log.debug(e)
 
     def write_to_file(self, button, jobID, browserTitle, result):
         def re_extract(text, pattern):
@@ -330,7 +342,6 @@ class EasyApplyBot:
 
     def get_job_page(self, jobID):
         # job = 'https://www.linkedin.com/jobs/view/3228680598/'
-        # job = 'https://www.linkedin.com/jobs/view/3247319469/'
         job = 'https://www.linkedin.com/jobs/view/' + str(jobID)
         self.browser.get(job)
         self.job_page = self.load_page(sleep=0.5)
@@ -359,9 +370,17 @@ class EasyApplyBot:
         return EasyApplyButton
 
     def send_resume(self):
+        # TODO O so much
+        # Check for additional questions in the application form
+        #   These questions need to be recorded in a CSV
+        #   These questions need to be loaded with answers from a CSV
+        #   
         def is_present(button_locator):
-            return len(self.browser.find_elements(button_locator[0],
+            present = len(self.browser.find_elements(button_locator[0],
                                                   button_locator[1])) > 0
+            # log.debug(f' {present}')
+            return present
+        
 
         try:
             time.sleep(random.uniform(1.5, 2.5))
@@ -373,38 +392,69 @@ class EasyApplyBot:
                               "button[aria-label='Submit application']")
             submit_application_locator = (By.CSS_SELECTOR,
                                           "button[aria-label='Submit application']")
-            error_locator = (By.CSS_SELECTOR,
-                             "p[data-test-form-element-error-message='true']")
-            upload_locator = (By.CSS_SELECTOR, "input[name='file']")
-            follow_locator = (By.CSS_SELECTOR, "label[for='follow-company-checkbox']")
+            # error_locator = (By.CSS_SELECTOR,
+            #                  "p[data-test-form-element-error-messages='true']")
+            error_locator = (By.CLASS_NAME,
+                             "artdeco-inline-feedback__message")
+            # upload_locator = (By.CSS_SELECTOR, "input[name='file']")
+            upload_locator = (By.CSS_SELECTOR,
+                              "input[name='file']")
+            # pattern to find the choose button
+            choose_locator = (By.CSS_SELECTOR,
+                              "button[aria-label='Choose Resume']")
+            
+            follow_locator = (By.CSS_SELECTOR, 
+                              "label[for='follow-company-checkbox']")
             # Privacy Policy next_locater
-            privacy_policy_locator = (By.XPATH, "//*[text()='I Agree Terms & Conditions']")
+            privacy_policy_locator = (By.XPATH, 
+                                      "//*[text()='I Agree Terms & Conditions']")
             # Subsection Title locator
-            title_locator = (By.CLASS_NAME, "t-16.t-bold")
+            title_locator = (By.XPATH, 
+                             "//h3[@class='t-16 t-bold']")
             # Questions identifier
 
             # Required question locator
-            required_locator = (By.CLASS_NAME, "t-14.fb-form-element-label__title--is-required")
-            # Radio button locator
-            radio_locator = (By.CLASS_NAME, "fb-radio.display-flex")
+            required_locator = (By.CLASS_NAME, 
+                                "fb-dash-form-element__label.fb-form-element-label__title--is-required")
+            # Yes Radio button locator
+            radio_locator_yes = (By.XPATH, 
+                                 "//input[@data-test-text-selectable-option__input='Yes']")
+            # No Radio button locator
+            radio_locator_no = (By.XPATH, 
+                                "//input[@data-test-text-selectable-option__input='No']")
+            
             # Additional Button i need to add here
 
             submitted = False
 
             while True:
+                
                 button = None
-                # Upload Cover Letter if possible
-                if is_present(upload_locator):
+                # Resume & Upload Cover Letter if possible
+                # log.debug('Choose Locator Triggered??')
+                if is_present(choose_locator):
+                    # button = self.wait.until(EC.element_to_be_clickable(privacy_policy_locator))
+                    choose_button = self.browser.find_elements(choose_locator[0], choose_locator[1])
+                    choose_button[0].click()
+                    time.sleep(random.uniform(4.5, 6.5))
 
+                # log.debug('Upload Locator Triggered??')
+                if is_present(upload_locator):
+                    log.info('NOTE UPLOAD BUTTON LOCATED')
                     input_buttons = self.browser.find_elements(upload_locator[0],
                                                                upload_locator[1])
+
                     for input_button in input_buttons:
+                        # log.debug(f'input_button: {input_button}')
                         parent = input_button.find_element(By.XPATH, "..")
                         sibling = parent.find_element(By.XPATH, "preceding-sibling::*")
                         grandparent = sibling.find_element(By.XPATH, "..")
                         for key in self.uploads.keys():
                             sibling_text = sibling.text
                             gparent_text = grandparent.text
+                            # log.debug(f'key {key}')
+                            # log.debug(f'sibling_text {sibling_text}')
+                            # log.debug(f'gparent_text {gparent_text}')
                             if key.lower() in sibling_text.lower() or key in gparent_text.lower():
                                 input_button.send_keys(self.uploads[key])
 
@@ -413,20 +463,26 @@ class EasyApplyBot:
 
                 # print(self.browser.find_elements(privacy_policy_locator))
                 # Agree to T&Cs
+                # log.debug('privacy_policy Locator Triggered??')
                 if is_present(privacy_policy_locator):
                     button = self.wait.until(EC.element_to_be_clickable(privacy_policy_locator))
                     button.click()
 
                 # Not sure how this code will work for multipule radio locator questions
+                # TODO is_present check on additional questions
                 try:
                     section_title = self.browser.find_element(title_locator[0], title_locator[1]).text
                     if section_title == "Additional" or section_title == "Additional Questions":
                         questions = self.browser.find_elements(required_locator[0], required_locator[1])
                         for question in questions:
                             if question.text == "Will you now or in the future require sponsorship for employment visa status?":
-                                radio_buttons = self.browser.find_elements(radio_locator[0], radio_locator[1])
-                                radio_buttons[1].click()
+                                radio_buttons = self.browser.find_elements(radio_locator_no[0], radio_locator_no[1])
+                                radio_buttons[0].click()
+                            # if question.text == "Are you comfortable commuting to this job's location?":
+                            #     radio_buttons = self.browser.find_elements(radio_locator_yes[0], radio_locator_yes[1])
+                            #     radio_buttons[1].click()
                 except Exception as e:
+                    log.debug(f'Section Detection encountered an error...')
                     print(e)
 
                 '''
@@ -447,11 +503,13 @@ class EasyApplyBot:
                 buttons = [next_locater, review_locater, follow_locator,
                            submit_locater, submit_application_locator]
                 for i, button_locator in enumerate(buttons):
-                    # print(button_locator)
+                    
                     if is_present(button_locator):
+                        # log.debug(f'Generic button locator trigger?? {button_locator}')
                         button = self.wait.until(EC.element_to_be_clickable(button_locator))
 
                     if is_present(error_locator):
+                        # log.debug(f'error locator trigger?? ')
                         for element in self.browser.find_elements(error_locator[0],
                                                                   error_locator[1]):
                             text = element.text
@@ -485,7 +543,7 @@ class EasyApplyBot:
 
     def load_page(self, sleep=1):
         scroll_page = 0
-        while scroll_page < 4000:
+        while scroll_page < 5000:
             self.browser.execute_script("window.scrollTo(0," + str(scroll_page) + " );")
             scroll_page += 200
             time.sleep(sleep)
@@ -510,7 +568,8 @@ class EasyApplyBot:
     def next_jobs_page(self, position, location, jobs_per_page):
         self.browser.get(
             "https://www.linkedin.com/jobs/search/?f_LF=f_AL&keywords=" +
-            position + location + "&f_E=2%2C3" + "&start=" + str(jobs_per_page))
+            position + location + "&start=" + str(jobs_per_page))
+            #  + "&f_E=2%2C3"
             # &f_E=2%2C3%2C4 - Entry, Assosiate, Mid
             # &f_E=2%2C3 - Entry, Assosiate
 
@@ -522,6 +581,64 @@ class EasyApplyBot:
     def finish_apply(self):
         self.browser.close()
 
+    # # Auto Application review script
+    # def review_applications(self):
+    #     file_name = "output.csv"
+    #     with open(file_name, 'rb') as f:
+    #         result = chardet.detect(f.read())
+    #         encoding = result['encoding']
+
+    #     # for chunk in pd.read_csv(file_name, sep=',', header=0, encoding=encoding):
+    #     #     print(chunk)
+    #     #     input("----")
+    #     applicationData = pd.read_csv("output.csv", sep=',', header=0, encoding=encoding)
+    #     # applicationData = pd.read_csv("output copy.csv", sep=',', header=0)
+
+    #     print("Cleaning duplicates...")
+    #     applicationData = applicationData.drop_duplicates(subset="jobID", keep='first')
+    #     TotaltoReview = len(applicationData.drop(applicationData[applicationData['result'] != False].index))
+
+    #     print("-----------------------------------------------")
+    #     print("***********************************************")
+    #     print('Total Entries: {0}'.format(len(applicationData.index)))
+    #     print('Entries to Review: {0}'.format(TotaltoReview))
+    #     print("***********************************************")
+    #     print("-----------------------------------------------")
+
+    #     url = "https://www.linkedin.com/jobs/view/"
+
+    #     count = 0
+    #     for dfindex, row in applicationData.iterrows():
+    #         if row['result'] is False:
+    #             ID = str(row["jobID"])
+                
+    #             wb.open(url + ID)
+
+    #             # Column then index then cell
+    #             applicationData.at[dfindex, 'jobID'] = ID
+    #             applicationData.at[dfindex, 'attempted'] = True
+    #             applicationData.at[dfindex, 'result'] = True
+
+    #             # applicationData.set_value(dfindex, 'result', True)
+
+    #             count += 1
+    #             if count % 10 == 0:
+    #                 applicationData.to_csv('output.csv', sep=',', index=False)
+    #                 print("-----------------------------------------------")
+    #                 print("--------------- Saving Progress ---------------")
+    #                 print("-----------------------------------------------")
+
+    #             print('Position: {0}'.format(row["job"]))
+    #             print('Company: {0}'.format(row["company"]))
+    #             print("")
+    #             print('Total Applications to Review: {0}'.format(TotaltoReview))
+    #             print('Reviewed: {0}'.format(count))
+    #             print("-----------------------------------------------")
+    #             print("----------------- Press Enter -----------------")
+    #             input("-----------------------------------------------")
+    #             print("")
+                
+    #     applicationData.to_csv('output.csv', sep=',', index=False)
 
 if __name__ == '__main__':
 
