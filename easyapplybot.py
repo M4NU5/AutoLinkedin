@@ -392,6 +392,8 @@ class EasyApplyBot:
                               "button[aria-label='Submit application']")
             submit_application_locator = (By.CSS_SELECTOR,
                                           "button[aria-label='Submit application']")
+            done_locator = (By.CLASS_NAME, 
+                            "artdeco-button" )
             # error_locator = (By.CSS_SELECTOR,
             #                  "p[data-test-form-element-error-messages='true']")
             error_locator = (By.CLASS_NAME,
@@ -408,6 +410,7 @@ class EasyApplyBot:
             # Privacy Policy next_locater
             privacy_policy_locator = (By.XPATH, 
                                       "//*[text()='I Agree Terms & Conditions']")
+            applied_locator = (By.CLASS_NAME, 'post-apply-timeline__entity-time')
             # Subsection Title locator
             title_locator = (By.XPATH, 
                              "//h3[@class='t-16 t-bold']")
@@ -429,6 +432,10 @@ class EasyApplyBot:
 
             while True:
                 
+                if is_present(applied_locator):
+                    submitted = True
+                    break
+
                 button = None
                 # Resume & Upload Cover Letter if possible
                 # log.debug('Choose Locator Triggered??')
@@ -469,21 +476,24 @@ class EasyApplyBot:
                     button.click()
 
                 # Not sure how this code will work for multipule radio locator questions
-                # TODO is_present check on additional questions
-                try:
-                    section_title = self.browser.find_element(title_locator[0], title_locator[1]).text
-                    if section_title == "Additional" or section_title == "Additional Questions":
-                        questions = self.browser.find_elements(required_locator[0], required_locator[1])
-                        for question in questions:
-                            if question.text == "Will you now or in the future require sponsorship for employment visa status?":
-                                radio_buttons = self.browser.find_elements(radio_locator_no[0], radio_locator_no[1])
-                                radio_buttons[0].click()
-                            # if question.text == "Are you comfortable commuting to this job's location?":
-                            #     radio_buttons = self.browser.find_elements(radio_locator_yes[0], radio_locator_yes[1])
-                            #     radio_buttons[1].click()
-                except Exception as e:
-                    log.debug(f'Section Detection encountered an error...')
-                    print(e)
+                # TODO 
+                # is_present check on additional questions
+                # FIX title catch
+                # Create generic function for question processing
+                # try:
+                #     section_title = self.browser.find_element(title_locator[0], title_locator[1]).text
+                #     if section_title == "Additional" or section_title == "Additional Questions":
+                #         questions = self.browser.find_elements(required_locator[0], required_locator[1])
+                #         for question in questions:
+                #             if question.text == "Will you now or in the future require sponsorship for employment visa status?":
+                #                 radio_buttons = self.browser.find_elements(radio_locator_no[0], radio_locator_no[1])
+                #                 radio_buttons[0].click()
+                #             # if question.text == "Are you comfortable commuting to this job's location?":
+                #             #     radio_buttons = self.browser.find_elements(radio_locator_yes[0], radio_locator_yes[1])
+                #             #     radio_buttons[1].click()
+                # except Exception as e:
+                #     log.debug(f'Section Detection encountered an error...')
+                #     print(e)
 
                 '''
                 count = 0
@@ -501,7 +511,7 @@ class EasyApplyBot:
                 # Click Next or submit button if possible
                 button = None
                 buttons = [next_locater, review_locater, follow_locator,
-                           submit_locater, submit_application_locator]
+                           submit_locater, submit_application_locator, done_locator]
                 for i, button_locator in enumerate(buttons):
                     
                     if is_present(button_locator):
