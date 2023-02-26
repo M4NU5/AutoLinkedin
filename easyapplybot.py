@@ -34,8 +34,8 @@ log = logging.getLogger(__name__)
 print("Installing chrome manager...")
 # TODO ChromeDriverManager().install() downloads 8 MB file each time script is run. 
 #           Can this be cached or optomised?
-driver = webdriver.Chrome(ChromeDriverManager().install())
-driver = webdriver.Chrome()
+#   driver = webdriver.Chrome(ChromeDriverManager().install())
+#driver = webdriver.Chrome()
 
 def setupLogger():
     dt = datetime.strftime(datetime.now(), "%m_%d_%y %H_%M_%S ")
@@ -80,7 +80,8 @@ class EasyApplyBot:
         questions = self.get_questions(question_filename)
         self.questions = questions if questions != None else []
         self.options = self.browser_options()
-        self.browser = driver
+        # self.browser = driver 
+        self.browser = webdriver.Chrome(options=self.options)
         self.wait = WebDriverWait(self.browser, 30)
         self.blacklist = blacklist
         self.blackListTitles = blackListTitles
@@ -123,10 +124,13 @@ class EasyApplyBot:
 
     def browser_options(self):
         options = Options()
+        options.add_argument("--headless")
         options.add_argument("--start-maximized")
         options.add_argument("--ignore-certificate-errors")
         options.add_argument('--no-sandbox')
         options.add_argument("--disable-extensions")
+
+        
 
         # Disable webdriver flags or you will be easily detectable
         options.add_argument("--disable-blink-features")
@@ -524,6 +528,7 @@ class EasyApplyBot:
                                                                   error_locator[1]):
                             text = element.text
                             if "Please enter a valid answer" in text:
+                                log.info("Required question encountered, RIP...")
                                 button = None
                                 break
 
