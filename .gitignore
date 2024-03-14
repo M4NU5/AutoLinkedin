@@ -1,7 +1,15 @@
-config.yaml
-output.csv
+**.yaml
+**.csv
 **.DS_Store
 **.pdf
+**.html
 /botenv
 /logs
 /archive
+/venv
+
+
+
+# Exclude from ignore
+!copy-config.yaml
+!copy-output.csv

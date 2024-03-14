@@ -367,88 +367,221 @@ class EasyApplyBot:
         return EasyApplyButton
 
     def send_resume(self):
+        # TODO O so much
+        # Check for additional questions in the application form
+        #   These questions need to be recorded in a CSV
+        #   These questions need to be loaded with answers from a CSV
+        #   
         def is_present(button_locator):
-            return len(self.browser.find_elements(*button_locator)) > 0
+            present = len(self.browser.find_elements(button_locator[0],
+                                                  button_locator[1])) > 0
+            # log.debug(f' {present}')
+            return present
         
-        def click_button_if_present(button_locator):
-            if is_present(button_locator):
-                button = self.wait.until(EC.element_to_be_clickable(button_locator))
-                button.click()
-                return True
-            return False
-
-        def select_recent_resume(days_threshold=5):
-            cv_elements = self.browser.find_elements_by_css_selector(".jobs-document-upload-redesign-card__container")
-            for cv in cv_elements:
-                date_element = cv.find_element_by_css_selector(".pt1.t-12.t-black--light")
-                date_str = date_element.text.split("Last used on ")[-1]
-                last_used_date = datetime.strptime(date_str, '%m/%d/%Y')
-                if last_used_date >= datetime.now() - timedelta(days=days_threshold):
-                    cv.click()
-                    return True
-            return False
-
-        button_locators = [
-            (By.CSS_SELECTOR, "button[aria-label='Continue to next step']"),
-            (By.CSS_SELECTOR, "button[aria-label='Review your application']"),
-            (By.CSS_SELECTOR, "button[aria-label='Submit application']"),
-            (By.CLASS_NAME, "artdeco-button"),
-            (By.XPATH, "//*[text()='I Agree Terms & Conditions']")
-        ]
-        
-        error_locator = (By.CLASS_NAME, "artdeco-inline-feedback__message")
-        applied_locator = (By.CLASS_NAME, 'post-apply-timeline__entity-time')
-        choose_locator = (By.CSS_SELECTOR, "button[aria-label='Choose Resume']")
-        upload_resume = (By.CSS_SELECTOR, "jobs-document-upload-redesign-card__header.truncate")
-        upload_locator = (By.CSS_SELECTOR, 'input[name="file"]')
 
         try:
+            time.sleep(random.uniform(1.5, 2.5))
+            next_locater = (By.CSS_SELECTOR,
+                            "button[aria-label='Continue to next step']")
+            review_locater = (By.CSS_SELECTOR,
+                              "button[aria-label='Review your application']")
+            submit_locater = (By.CSS_SELECTOR,
+                              "button[aria-label='Submit application']")
+            submit_application_locator = (By.CSS_SELECTOR,
+                                          "button[aria-label='Submit application']")
+            done_locator = (By.CLASS_NAME, 
+                            "artdeco-button" )
+            # error_locator = (By.CSS_SELECTOR,
+            #                  "p[data-test-form-element-error-messages='true']")
+            error_locator = (By.CLASS_NAME,
+                             "artdeco-inline-feedback__message")
+            # upload_locator = (By.CSS_SELECTOR, "input[name='file']")
+            upload_locator = (By.CSS_SELECTOR,
+                              'input[name="file"]')
+            upload_resume = (By.CSS_SELECTOR,
+                              "jobs-document-upload-redesign-card__header.truncate")
+            upload_resume_selected = (By.CSS_SELECTOR, 
+                             "jobs-document-upload-redesign-card__container--selected") 
+            # pattern to find the choose button
+            choose_locator = (By.CSS_SELECTOR,
+                              "button[aria-label='Choose Resume']")
+            
+            follow_locator = (By.CSS_SELECTOR, 
+                              "label[for='follow-company-checkbox']")
+            # Privacy Policy next_locater
+            privacy_policy_locator = (By.XPATH, 
+                                      "//*[text()='I Agree Terms & Conditions']")
+            applied_locator = (By.CLASS_NAME, 'post-apply-timeline__entity-time')
+            # Subsection Title locator
+            title_locator = (By.XPATH, 
+                             "//h3[@class='t-16 t-bold']")
+            # Questions identifier
+
+            # Required question locator
+            required_locator = (By.CLASS_NAME, 
+                                "fb-dash-form-element__label.fb-form-element-label__title--is-required")
+            # Yes Radio button locator
+            radio_locator_yes = (By.XPATH, 
+                                 "//input[@data-test-text-selectable-option__input='Yes']")
+            # No Radio button locator
+            radio_locator_no = (By.XPATH, 
+                                "//input[@data-test-text-selectable-option__input='No']")
+            
+            # Additional Button i need to add here
+
+            submitted = False
+
             while True:
+                
                 if is_present(applied_locator):
-                    log.info("Application Submitted")
-                    return True
+                    submitted = True
+                    break
 
+                button = None
+                # Resume & Upload Cover Letter if possible
+                # log.debug('Choose Locator Triggered??')
                 if is_present(choose_locator):
-                    click_button_if_present(choose_locator)
+                    # button = self.wait.until(EC.element_to_be_clickable(privacy_policy_locator))
+                    choose_button = self.browser.find_elements(choose_locator[0], choose_locator[1])
+                    choose_button[0].click()
                     time.sleep(random.uniform(4.5, 6.5))
 
-                if is_present(upload_resume) and not select_recent_resume():
-                    pass  # Handle case when no recent resume is found.
+                if is_present(upload_resume):
+                    days_threshold = 5
+                    # Fetch the CV elements containing the last used date information
+                    cv_elements = self.browser.find_elements_by_css_selector(".jobs-document-upload-redesign-card__container")
 
+                    for cv in cv_elements:
+                        date_element = cv.find_element_by_css_selector(".pt1.t-12.t-black--light")
+                        date_str = date_element.text.split("Last used on ")[-1]
+                        
+                        # Convert date string to datetime object
+                        last_used_date = datetime.strptime(date_str, '%m/%d/%Y')
+                        
+                        # Check if the last used date is within the threshold
+                        if last_used_date >= datetime.now() - timedelta(days=days_threshold):
+                            # Select the CV (or perform any other desired action on the CV)
+                            # Here, I'm assuming the CV can be selected by clicking on it
+                            cv.click()
+                            # return True
+
+                    # If no recent CV is found, return False
+                    # return False
+
+                    # log.info('NOTE FIRST RESUME found')
+                    # if not is_present(upload_resume_selected):
+                    #     log.info('NOTE SELECTED FIRST RESUME')
+                    #     button = self.wait.until(EC.element_to_be_clickable(upload_resume))
+                    #     button[0].click()
+
+                # log.debug('Upload Locator Triggered??')
                 if is_present(upload_locator):
-                    input_buttons = self.browser.find_elements(*upload_locator)
+                    log.info('NOTE UPLOAD BUTTON LOCATED')
+                    input_buttons = self.browser.find_elements(upload_locator[0],
+                                                               upload_locator[1])
+                    
+                    log.debug(input_buttons)
+                    log.debug(is_present(upload_resume))
+                    # input("ilbuhjsdfvAVILUHJNBRVAWESILBUHWEDFipuhwedrgvil;bujfvbadwes")
                     for input_button in input_buttons:
+                        # log.debug(f'input_button: {input_button}')
+                        # parent = input_button.find_element(By.XPATH, "..")
+                        # sibling = parent.find_element(By.XPATH, "preceding-sibling::*")
+                        # grandparent = sibling.find_element(By.XPATH, "..")
+                        # for key in self.uploads.keys():
+                        #     sibling_text = sibling.text
+                        #     gparent_text = grandparent.text
+                        #     # log.debug(f'key {key}')
+                        #     # log.debug(f'sibling_text {sibling_text}')
+                        #     # log.debug(f'gparent_text {gparent_text}')
+                        #     if key.lower() in sibling_text.lower() or key in gparent_text.lower():
                         input_button.send_keys(self.uploads[key])
+
+                    # input_button[0].send_keys(self.cover_letter_loctn)
                     time.sleep(random.uniform(4.5, 6.5))
 
-                click_button_if_present(button_locators[4])  # privacy policy locator
+                # print(self.browser.find_elements(privacy_policy_locator))
+                # Agree to T&Cs
+                # log.debug('privacy_policy Locator Triggered??')
+                if is_present(privacy_policy_locator):
+                    button = self.wait.until(EC.element_to_be_clickable(privacy_policy_locator))
+                    button.click()
 
-                clicked = False
-                for button_locator in button_locators:
-                    if click_button_if_present(button_locator):
-                        clicked = True
+                # Not sure how this code will work for multipule radio locator questions
+                # TODO 
+                # is_present check on additional questions
+                # FIX title catch
+                # Create generic function for question processing
+                # try:
+                #     section_title = self.browser.find_element(title_locator[0], title_locator[1]).text
+                #     if section_title == "Additional" or section_title == "Additional Questions":
+                #         questions = self.browser.find_elements(required_locator[0], required_locator[1])
+                #         for question in questions:
+                #             if question.text == "Will you now or in the future require sponsorship for employment visa status?":
+                #                 radio_buttons = self.browser.find_elements(radio_locator_no[0], radio_locator_no[1])
+                #                 radio_buttons[0].click()
+                #             # if question.text == "Are you comfortable commuting to this job's location?":
+                #             #     radio_buttons = self.browser.find_elements(radio_locator_yes[0], radio_locator_yes[1])
+                #             #     radio_buttons[1].click()
+                # except Exception as e:
+                #     log.debug(f'Section Detection encountered an error...')
+                #     print(e)
+
+
+                # count = 0
+                # total_questions = len(questions)
+                # count += 1
+
+                # required_elements_arr = self.browser.find_elements(required_locator[0], required_locator[1])
+                # for i, required_elem    ent in enumerate(required_elements_arr):
+                #     print("index: {0} ---- Text:  {1}".format(i, required_element.text))
+                # input("We at the additional Questions yo")
+                # for element in self.browser.find_elements(required_elements_locator):
+                #     input(element)
+
+                # Click Next or submit button if possible
+                button = None
+                buttons = [next_locater, review_locater, follow_locator,
+                           submit_locater, submit_application_locator, done_locator]
+                for i, button_locator in enumerate(buttons):
+                    
+                    if is_present(button_locator):
+                        # log.debug(f'Generic button locator trigger?? {button_locator}')
+                        button = self.wait.until(EC.element_to_be_clickable(button_locator))
+
+                    if is_present(error_locator):
+                        # log.debug(f'error locator trigger?? ')
+                        for element in self.browser.find_elements(error_locator[0],
+                                                                  error_locator[1]):
+                            text = element.text
+                            if "Please enter a valid answer" in text:
+                                log.info("Required question encountered, RIP...")
+                                button = None
+                                break
+
+                    if button:
+                        button.click()
                         time.sleep(random.uniform(1.5, 2.5))
-                        break
-
-                if is_present(error_locator):
-                    for element in self.browser.find_elements(*error_locator):
-                        if "Please enter a valid answer" in element.text:
-                            log.info("Required question encountered, RIP...")
+                        if i in (3, 4):
+                            submitted = True
+                        if i != 2:
                             break
-
-                if not clicked:
+                if button == None:
                     log.info("Could not complete submission")
-                    return False
+                    break
+                elif submitted:
+                    log.info("Application Submitted")
+                    break
 
             time.sleep(random.uniform(1.5, 2.5))
 
+
         except Exception as e:
             log.info(e)
-            log.info("Cannot apply to this job")
-            raise
+            log.info("cannot apply to this job")
+            raise (e)
 
-        return False
-
+        return submitted
 
     def load_page(self, sleep=1):
         scroll_page = 0
