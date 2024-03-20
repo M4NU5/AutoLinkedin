@@ -124,7 +124,7 @@ class EasyApplyBot:
 
     def browser_options(self):
         options = Options()
-        options.add_argument("--headless")
+        # options.add_argument("--headless")
         options.add_argument("--start-maximized")
         options.add_argument("--ignore-certificate-errors")
         options.add_argument('--no-sandbox')
@@ -207,7 +207,7 @@ class EasyApplyBot:
                 log.debug(f"Sleeping for {round(randoTime, 1)}")
 
                 time.sleep(randoTime)
-                self.load_page(sleep=3)
+                self.load_page(sleep=1)
 
                 # LinkedIn displays the search results in a scrollable <div> on the left side, we have to scroll to its bottom
                 # This will be a single element
@@ -287,7 +287,7 @@ class EasyApplyBot:
                                 string_easy = "* has Easy Apply Button"
                                 log.info("Clicking the EASY apply button")
                                 button.click()
-                                time.sleep(3)
+                                time.sleep(2)
                                 result = self.send_resume()
                                 count_application += 1
                                 big_sleep = False  #
@@ -345,7 +345,7 @@ class EasyApplyBot:
             writer.writerow(toWrite)
 
     def get_job_page(self, jobID):
-        # job = 'https://www.linkedin.com/jobs/view/3228680598/'
+        # job = 'https://www.linkedin.com/jobs/view/3841841542/'
         job = 'https://www.linkedin.com/jobs/view/' + str(jobID)
         self.browser.get(job)
         self.job_page = self.load_page(sleep=0.5)
@@ -365,9 +365,10 @@ class EasyApplyBot:
 
     def get_easy_apply_button(self):
         try:
-            button = self.browser.find_elements(By.XPATH, '//button[contains(@class, "jobs-apply")]/span[1]')
-
-            EasyApplyButton = button[0]
+            # button = self.browser.find_elements(By.XPATH, '//button[contains(@class, "jobs-apply-button")]')
+            button = self.browser.find_elements(By.XPATH, '//button[contains(@class, "jobs-apply-button")]/span[1]')
+            # button = self.browser.find_elements(By.XPATH, '//button[contains(@class, "jobs-apply-button")]/span[contains(@class, "artdeco-button__text")]')
+            EasyApplyButton = button[1]
         except:
             EasyApplyButton = False
 
@@ -435,14 +436,12 @@ class EasyApplyBot:
             submitted = False
 
             while True:
-                
                 if is_present(applied_locator):
                     submitted = True
                     break
 
                 button = None
                 # Resume & Upload Cover Letter if possible
-                # log.debug('Choose Locator Triggered??')
                 if is_present(choose_locator):
                     # button = self.wait.until(EC.element_to_be_clickable(privacy_policy_locator))
                     choose_button = self.browser.find_elements(choose_locator[0], choose_locator[1])
@@ -450,27 +449,27 @@ class EasyApplyBot:
                     time.sleep(random.uniform(4.5, 6.5))
 
                 # log.debug('Upload Locator Triggered??')
-                if is_present(upload_locator):
-                    log.info('NOTE UPLOAD BUTTON LOCATED')
-                    input_buttons = self.browser.find_elements(upload_locator[0],
-                                                               upload_locator[1])
+                # if is_present(upload_locator):
+                #     log.info('NOTE UPLOAD BUTTON LOCATED')
+                #     input_buttons = self.browser.find_elements(upload_locator[0],
+                #                                                upload_locator[1])
 
-                    for input_button in input_buttons:
-                        # log.debug(f'input_button: {input_button}')
-                        parent = input_button.find_element(By.XPATH, "..")
-                        sibling = parent.find_element(By.XPATH, "preceding-sibling::*")
-                        grandparent = sibling.find_element(By.XPATH, "..")
-                        for key in self.uploads.keys():
-                            sibling_text = sibling.text
-                            gparent_text = grandparent.text
-                            # log.debug(f'key {key}')
-                            # log.debug(f'sibling_text {sibling_text}')
-                            # log.debug(f'gparent_text {gparent_text}')
-                            if key.lower() in sibling_text.lower() or key in gparent_text.lower():
-                                input_button.send_keys(self.uploads[key])
+                #     for input_button in input_buttons:
+                #         # log.debug(f'input_button: {input_button}')
+                #         parent = input_button.find_element(By.XPATH, "..")
+                #         sibling = parent.find_element(By.XPATH, "preceding-sibling::*")
+                #         grandparent = sibling.find_element(By.XPATH, "..")
+                #         for key in self.uploads.keys():
+                #             sibling_text = sibling.text
+                #             gparent_text = grandparent.text
+                #             # log.debug(f'key {key}')
+                #             # log.debug(f'sibling_text {sibling_text}')
+                #             # log.debug(f'gparent_text {gparent_text}')
+                #             if key.lower() in sibling_text.lower() or key in gparent_text.lower():
+                #                 input_button.send_keys(self.uploads[key])
 
-                    # input_button[0].send_keys(self.cover_letter_loctn)
-                    time.sleep(random.uniform(4.5, 6.5))
+                #     # input_button[0].send_keys(self.cover_letter_loctn)
+                #     time.sleep(random.uniform(4.5, 6.5))
 
                 # print(self.browser.find_elements(privacy_policy_locator))
                 # Agree to T&Cs
@@ -529,6 +528,7 @@ class EasyApplyBot:
                             text = element.text
                             if "Please enter a valid answer" in text:
                                 log.info("Required question encountered, RIP...")
+                                time.sleep(10)
                                 button = None
                                 break
 
