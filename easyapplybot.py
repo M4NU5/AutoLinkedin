@@ -228,7 +228,9 @@ class EasyApplyBot:
                     break 
 
                 # get job ID of each job link
-                # TODO Blacklist skip here
+                # TODO 
+                #  - Blacklist skip here
+                #  - Applied to skip
                 IDs = []
                 for link in links:
                     children = link.find_elements(By.XPATH, './/a[@data-control-id]')
@@ -483,20 +485,21 @@ class EasyApplyBot:
                 # is_present check on additional questions
                 # FIX title catch
                 # Create generic function for question processing
-                # try:
-                #     section_title = self.browser.find_element(title_locator[0], title_locator[1]).text
-                #     if section_title == "Additional" or section_title == "Additional Questions":
-                #         questions = self.browser.find_elements(required_locator[0], required_locator[1])
-                #         for question in questions:
-                #             if question.text == "Will you now or in the future require sponsorship for employment visa status?":
-                #                 radio_buttons = self.browser.find_elements(radio_locator_no[0], radio_locator_no[1])
-                #                 radio_buttons[0].click()
+                try:
+                    section_title = self.browser.find_element(title_locator[0], title_locator[1]).text
+                    if section_title == "Additional" or section_title == "Additional Questions":
+                        log.info("Additional Questions Detected")
+                        questions = self.browser.find_elements(required_locator[0], required_locator[1])
+                        log.debug(f"Questions: {questions}")
+                        for question in questions:
+                            if question.text == "Will you now or in the future require sponsorship for employment visa status?":
+                                radio_buttons = self.browser.find_elements(radio_locator_no[0], radio_locator_no[1])
+                                radio_buttons[0].click()
                 #             # if question.text == "Are you comfortable commuting to this job's location?":
                 #             #     radio_buttons = self.browser.find_elements(radio_locator_yes[0], radio_locator_yes[1])
                 #             #     radio_buttons[1].click()
-                # except Exception as e:
-                #     log.debug(f'Section Detection encountered an error...')
-                #     print(e)
+                except Exception as e:
+                    log.debug(f'Section Detection encountered an error... {e}')
 
                 '''
                 count = 0
@@ -583,7 +586,7 @@ class EasyApplyBot:
     def next_jobs_page(self, position, location, jobs_per_page):
         self.browser.get(
             "https://www.linkedin.com/jobs/search/?f_LF=f_AL&keywords=" +
-            position + location + "&start=" + str(jobs_per_page))
+            position + location + "&start=" + str(jobs_per_page) + "&sortBy=DD")
             #  + "&f_E=2%2C3"
             # &f_E=2%2C3%2C4 - Entry, Assosiate, Mid
             # &f_E=2%2C3 - Entry, Assosiate

@@ -19,6 +19,7 @@ def ReviewApplications():
     # applicationData = pd.read_csv("output copy.csv", sep=',', header=0)
 
     print("Cleaning duplicates...")
+
     applicationData = applicationData.drop_duplicates(subset="jobID", keep='first')
     TotaltoReview = len(applicationData.drop(applicationData[applicationData['result'] != False].index))
 
